@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级通知生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .tab-container {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom-color: #007bff;
+            background: white;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .link-container {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .generated-link {
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .message-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .message-item {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .message-content {
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .stats {
+            text-align: center;
+            margin: 10px 0;
+            color: #666;
+        }
+        
+        .deploy-info {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #2e7d32;
+            text-align: center;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 10px;
+            }
+            
+            header {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📢 班级通知生成器</h1>
+        <p class="deploy-info">🌐 已部署到GitHub Pages - 支持跨设备消息发送</p>
+        <div class="stats" id="messageStats">共 0 条消息</div>
+        </header>
+        
+        <div class="tab-container">
+            <div class="tab active" onclick="switchTab('generate')">📝 生成通知</div>
+            <div class="tab" onclick="switchTab('view')">📋 查看消息</div>
+        </div>
+        
+        <!-- 生成通知标签页 -->
+        <div class="tab-content active" id="generateTab">
+            <div class="form-group">
+                <label for="senderName">👤 发送者姓名：</label>
+                <input type="text" id="senderName" placeholder="请输入您的姓名（如：班主任）" value="班主任">
+            </div>
+            
+            <div class="form-group">
+                <label for="messageContent">💬 通知内容：</label>
+                <textarea id="messageContent" placeholder="请输入通知内容..."></textarea>
+            </div>
+            
+            <button class="btn" onclick="generateLink()">🔗 生成通知链接</button>
+            
+            <div class="link-container" id="linkContainer" style="display: none;">
+                <h4>✅ 通知链接已生成</h4>
+                <p>复制下面的链接，发送到微信班级群：</p>
+                <div class="generated-link" id="generatedLink"></div>
+                <button class="copy-btn" onclick="copyLink()">📋 复制链接</button>
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                    点击链接的同学将自动收到这条通知
+                </p>
+            </div>
+        </div>
+        
+        <!-- 查看消息标签页 -->
+        <div class="tab-content" id="viewTab">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>📨 收到的通知</h3>
+                <button class="btn btn-secondary" onclick="clearAllMessages()" style="width: auto; padding: 8px 16px;">清空消息</button>
+            </div>
+            
+            <div class="message-list" id="messageList">
+                <div class="empty-state">
+                    <h3>暂无消息</h3>
+                    <p>点击通知链接后，消息将显示在这里</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 标签页切换
+        function switchTab(tabName) {
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 移除所有标签的激活状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签页
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // 激活选中的标签
+            document.querySelector(`.tab[onclick*="'${tabName}'"]`).classList.add('active');
+            
+            // 如果是查看消息标签页，刷新消息列表
+            if (tabName === 'view') {
+                displayMessages();
+            }
+        }
+        
+        // 生成通知链接
+        function generateLink() {
+            const sender = document.getElementById('senderName').value.trim();
+            const message = document.getElementById('messageContent').value.trim();
+            
+            if (!sender) {
+                alert('请输入发送者姓名');
+                return;
+            }
+            
+            if (!message) {
+                alert('请输入通知内容');
+                return;
+            }
+            
+            // 编码消息内容
+            const encodedMessage = encodeURIComponent(message);
+            const encodedSender = encodeURIComponent(sender);
+            
+            // 生成完整链接
+            const baseUrl = window.location.href.split('?')[0];
+            const link = `${baseUrl}?message=${encodedMessage}&sender=${encodedSender}`;
+            
+            // 显示链接
+            document.getElementById('generatedLink').textContent = link;
+            document.getElementById('linkContainer').style.display = 'block';
+            
+            // 自动滚动到链接区域
+            document.getElementById('linkContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 复制链接到剪贴板
+        function copyLink() {
+            const linkText = document.getElementById('generatedLink').textContent;
+            
+            navigator.clipboard.writeText(linkText).then(() => {
+                alert('✅ 链接已复制到剪贴板！\n\n现在可以粘贴到微信发送给同学了');
+            }).catch(err => {
+                // 如果clipboard API不可用，使用传统方法
+                const textArea = document.createElement('textarea');
+                textArea.value = linkText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('✅ 链接已复制到剪贴板！\n\n现在可以粘贴到微信发送给同学了');
+            });
+        }
+        
+        // 从URL参数获取消息
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const message = params.get('message');
+            const sender = params.get('sender');
+            
+            if (message && sender) {
+                // 解码消息内容
+                const decodedMessage = decodeURIComponent(message);
+                const decodedSender = decodeURIComponent(sender);
+                
+                saveMessage(decodedMessage, decodedSender);
+                
+                // 清除URL参数，避免重复添加
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // 自动切换到查看消息标签页
+                switchTab('view');
+                
+                // 显示成功提示
+                setTimeout(() => {
+                    alert(`✅ 通知已接收！\n\n来自：${decodedSender}\n内容：${decodedMessage}`);
+                }, 100);
+            }
+        }
+        
+        // 保存消息到本地存储
+        function saveMessage(message, sender) {
+            let messages = JSON.parse(localStorage.getItem('classMessages') || '[]');
+            const newMessage = {
+                id: Date.now(),
+                sender: sender,
+                message: message,
+                timestamp: new Date().toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                })
+            };
+            
+            messages.unshift(newMessage);
+            localStorage.setItem('classMessages', JSON.stringify(messages));
+            displayMessages();
+        }
+        
+        // 显示消息列表
+        function displayMessages() {
+            const messageList = document.getElementById('messageList');
+            const messageStats = document.getElementById('messageStats');
+            const messages = JSON.parse(localStorage.getItem('classMessages') || '[]');
+            
+            messageStats.textContent = `共 ${messages.length} 条消息`;
+            
+            if (messages.length === 0) {
+                messageList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>暂无消息</h3>
+                        <p>点击通知链接后，消息将显示在这里</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            messageList.innerHTML = messages.map(msg => `
+                <div class="message-item">
+                    <div class="message-header">
+                        <span class="message-sender">${msg.sender}</span>
+                        <span class="message-time">${msg.timestamp}</span>
+                    </div>
+                    <div class="message-content">${msg.message}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 清空所有消息
+        function clearAllMessages() {
+            if (confirm('确定要清空所有消息吗？此操作不可撤销。')) {
+                localStorage.removeItem('classMessages');
+                displayMessages();
+                
+                // 更新统计
+                document.getElementById('messageStats').textContent = '共 0 条消息';
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查URL参数并处理消息
+            getUrlParams();
+            
+            // 显示消息统计
+            displayMessages();
+            
+            // 为输入框添加回车快捷键
+            document.getElementById('messageContent').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    generateLink();
+                }
+            });
+            
+            // 自动聚焦到消息内容输入框
+            document.getElementById('messageContent').focus();
+        });
+    </script>
+</body>
+</html>
