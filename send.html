@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级通知系统 - 发送端</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>班级通知发送端</h1>
+            <div class="teacher-info">
+                <input type="text" id="teacherName" placeholder="请输入您的姓名" value="">
+            </div>
+        </header>
+
+        <!-- 消息发送区域 -->
+        <section class="message-form">
+            <h2>发送新通知</h2>
+            <div class="form-group">
+                <textarea id="messageContent" placeholder="请输入通知内容" rows="4"></textarea>
+            </div>
+            
+            <button id="sendBtn" class="btn-primary">发送通知</button>
+        </section>
+
+
+
+        <!-- 消息状态跟踪 -->
+        <section id="statusSection" class="status-section hidden">
+            <h3>消息状态</h3>
+            <div class="status-info">
+                <p><strong>消息ID：</strong><span id="messageId"></span></p>
+                <p><strong>发送时间：</strong><span id="sendTime"></span></p>
+                <p><strong>当前状态：</strong><span id="messageStatus" class="status-sent">发送中...</span></p>
+            </div>
+            <div id="receiptList" class="receipt-list">
+                <!-- 已读回执列表 -->
+            </div>
+        </section>
+
+        <!-- 历史消息 -->
+        <section class="history-section">
+            <h2>历史消息</h2>
+            <div id="historyMessages" class="history-messages">
+                <p class="empty-message">暂无历史消息</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- 初始化脚本 -->
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化发送端应用
+            initSendApp();
+        });
+    </script>
+</body>
+</html>
